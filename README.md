@@ -77,7 +77,7 @@ cp .env.example .env
 Edit `.env`:
 ```ini
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.8-flash
 ```
 
 > **Security Note:** `.env` is ignored by `.gitignore`. Never commit API keys or secrets to version control.

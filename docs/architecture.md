@@ -27,7 +27,7 @@ flowchart TD
     end
 
     subgraph LLM ["Google Gemini AI"]
-        GeminiAPI["Google Gemini 2.5 Flash / Pro (google-genai SDK)"]
+        GeminiAPI["Google Gemini 3.8 Flash / Pro (google-genai SDK)"]
     end
 
     subgraph Serialization ["Export & Output Layer"]
