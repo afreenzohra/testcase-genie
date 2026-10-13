@@ -6,6 +6,12 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+# Allow running this file directly (python src/testcase_genie/cli.py), as the
+# README documents, by putting src/ on the import path.
+_SRC_DIR = Path(__file__).resolve().parents[1]
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -95,7 +101,7 @@ def generate(
         None,
         "--model",
         "-m",
-        help="Gemini model override (e.g. gemini-3.8-flash, gemini-3.8-pro).",
+        help="Gemini model override (e.g. gemini-3.8-flash).",
     ),
     name: Optional[str] = typer.Option(
         None,
