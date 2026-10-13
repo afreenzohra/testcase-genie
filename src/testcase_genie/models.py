@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class TestCaseType(str, Enum):
     """Categorization of test case behavior."""
+    __test__ = False
     POSITIVE = "positive"
     NEGATIVE = "negative"
     EDGE = "edge"
@@ -30,6 +31,7 @@ class FrameworkType(str, Enum):
 
 class TestCase(BaseModel):
     """Schema representing an individual structured QA test case."""
+    __test__ = False
 
     id: str = Field(
         ...,
@@ -115,6 +117,7 @@ class TestCase(BaseModel):
 
 class TestCaseSuite(BaseModel):
     """Collection of generated test cases and metadata for a user story."""
+    __test__ = False
 
     title: str = Field(
         default="Generated Test Suite",

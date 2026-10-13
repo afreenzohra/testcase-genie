@@ -49,6 +49,7 @@ def load_prompt_file(filename: str) -> str:
 
 class TestCaseGenerator:
     """Generates structured test cases and Page Object Model automation code."""
+    __test__ = False
 
     def __init__(self, agent: Optional[GeminiAgent] = None) -> None:
         """Initialize with an optional GeminiAgent instance."""
@@ -78,10 +79,10 @@ class TestCaseGenerator:
         cfg = config or GenerationConfig()
         app_type_str = cfg.app_type.strip() if cfg.app_type else "General Web/API Application"
 
-        prompt = self.test_gen_template.format(
-            app_type=app_type_str,
-            test_count=cfg.test_count,
-            user_story=clean_story,
+        prompt = (
+            self.test_gen_template.replace("{app_type}", app_type_str)
+            .replace("{test_count}", str(cfg.test_count))
+            .replace("{user_story}", clean_story)
         )
 
         # First attempt
@@ -149,10 +150,10 @@ class TestCaseGenerator:
         test_cases_dict = [tc.model_dump() for tc in suite.test_cases]
         test_cases_json = json.dumps(test_cases_dict, indent=2)
 
-        prompt = self.code_gen_template.format(
-            framework=framework.value,
-            user_story=user_story.strip(),
-            test_cases_json=test_cases_json,
+        prompt = (
+            self.code_gen_template.replace("{framework}", framework.value)
+            .replace("{user_story}", user_story.strip())
+            .replace("{test_cases_json}", test_cases_json)
         )
 
         raw_code = self.agent.generate_content(
