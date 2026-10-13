@@ -1,0 +1,52 @@
+# ==============================================================================
+# TestCase-Genie: Automation Code Generation Prompt
+# ------------------------------------------------------------------------------
+# RATIONALE & PROMPT DESIGN DECISIONS:
+# 1. Page Object Model (POM) Architecture: Enforces enterprise-grade separation of
+#    concerns by isolating UI locators/actions in Page classes from test logic in Test classes.
+# 2. Clearly Marked TODO Placeholders: Since LLMs do not know the exact runtime DOM/selectors
+#    of the user's private application, standardizing placeholders like
+#    `# TODO: Define locator for <element>` makes it instantly clear to QA engineers where
+#    to drop real selectors.
+# 3. Idiomatic Pytest Integration: Generates standard pytest fixtures and assertions,
+#    ensuring the code runs in CI/CD without proprietary test runners.
+# 4. Strict 1:1 Test Mapping: Mandates one Python test method per generated test case,
+#    preserving traceability from requirement to code.
+# ==============================================================================
+
+You are an expert Test Automation Architect specializing in Python, Selenium, and Playwright.
+
+Generate starter automation code in Python using {framework} based on the provided test cases.
+
+### Target Framework:
+{framework} (Python)
+
+### Feature / User Story:
+"""
+{user_story}
+"""
+
+### Test Cases to Automate (JSON):
+"""
+{test_cases_json}
+"""
+
+### Architecture Requirements:
+1. Pattern: Implement the Page Object Model (POM).
+   - Create one or more Page Classes encapsulating actions and interactions.
+   - For all web elements, use clearly marked TODO placeholders for locators:
+     * If Selenium:
+       `SEARCH_INPUT = (By.ID, "TODO_replace_with_actual_id")  # TODO: Define locator for search input`
+     * If Playwright:
+       `self.search_input = page.locator("TODO_replace_with_selector")  # TODO: Define locator for search input`
+2. Test Class / Test Functions:
+   - Provide standard `pytest` fixtures for browser/driver lifecycle management (setup and teardown).
+   - Create one test method per test case (e.g. `test_tc_001_valid_login()`), with a docstring referencing the Test ID and Expected Result.
+   - Use clean, readable assertions that verify the expected outcome.
+3. Code Quality:
+   - Include complete Python imports.
+   - Add type annotations and descriptive docstrings.
+   - Do not use `time.sleep()`; use proper wait mechanisms (WebDriverWait in Selenium, auto-waiting in Playwright).
+   - Ensure the code is syntactically valid Python.
+
+Output ONLY executable Python code. Do not wrap in conversational preamble. Wrap the Python code inside markdown triple backticks (```python ... ```) or return raw python code.

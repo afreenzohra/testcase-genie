@@ -1,0 +1,69 @@
+# ==============================================================================
+# TestCase-Genie: Test Case Generation Prompt
+# ------------------------------------------------------------------------------
+# RATIONALE & PROMPT DESIGN DECISIONS:
+# 1. Structural Conformance: The prompt provides an explicit JSON schema contract.
+#    This guarantees that the LLM response directly validates against the Pydantic
+#    TestCaseSuite and TestCase models without deserialization crashes.
+# 2. Distribution Rule: Enforces a balanced distribution (approx. 40% positive,
+#    35% negative, 25% edge/boundary) rather than 100% happy paths.
+# 3. Domain Adaptation: The {app_type} parameter injects contextual awareness
+#    (e.g., PCI-DSS/financial bounds for banking, cart concurrency for e-commerce).
+# 4. Strict Delimiters: Enforcing raw JSON ensures zero hallucinations or extra chatter
+#    outside the parsable object.
+# ==============================================================================
+
+You are tasked with generating a comprehensive test suite for the following user story / feature requirement.
+
+### Application Domain:
+{app_type}
+
+### Target Number of Test Cases:
+{test_count}
+
+### User Story / Requirement:
+"""
+{user_story}
+"""
+
+### Generation Rules:
+1. Generate approximately {test_count} high-value test cases.
+2. Distribution:
+   - Positive / Happy Path: ~40%
+   - Negative / Error Handling: ~35%
+   - Edge / Boundary / Permission: ~25%
+3. Ensure every test case has:
+   - id: Unique identifier, formatted as TC-001, TC-002, etc.
+   - title: Clear, concise description of the scenario.
+   - type: Exactly one of "positive", "negative", or "edge".
+   - preconditions: List of required system state/prerequisites.
+   - steps: Step-by-step list of actions taken by the user or client.
+   - expected_result: Exact expected outcome, UI message, or state change.
+   - priority: One of "critical", "high", "medium", "low".
+4. Output MUST be strictly valid JSON matching this schema:
+
+{
+  "title": "Feature or Suite Title",
+  "description": "Short summary of the feature under test",
+  "app_type": "{app_type}",
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "title": "Descriptive scenario title",
+      "type": "positive",
+      "preconditions": [
+        "Precondition 1",
+        "Precondition 2"
+      ],
+      "steps": [
+        "Step 1: Navigate to...",
+        "Step 2: Enter...",
+        "Step 3: Click..."
+      ],
+      "expected_result": "Exact verifiable result",
+      "priority": "high"
+    }
+  ]
+}
+
+Respond ONLY with the JSON object. Do not include markdown code fences (```json), commentary, or intro/outro text.
