@@ -103,13 +103,13 @@ def clean_python_code(raw_code: str) -> str:
 class GeminiAgent:
     """Wrapper around the Google GenAI SDK for TestCase-Genie."""
 
-    DEFAULT_MODEL = "gemini-2.5-flash"
+    DEFAULT_MODEL = "gemini-3.8-flash"
 
     def __init__(
         self,
         api_key: Optional[str] = None,
         model: Optional[str] = None,
-        max_retries: int = 2,
+        max_retries: int = 3,
     ) -> None:
         """Initialize the Gemini client.
         
@@ -155,7 +155,7 @@ class GeminiAgent:
         )
 
         attempts = 0
-        backoff = 2.0
+        backoff = 3.0
 
         while attempts <= self.max_retries:
             try:

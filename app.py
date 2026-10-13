@@ -149,7 +149,7 @@ with st.sidebar:
     # Model configuration
     model_choice = st.text_input(
         "Gemini Model",
-        value=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        value=os.getenv("GEMINI_MODEL", "gemini-3.8-flash"),
         help="Configurable via GEMINI_MODEL in .env or override here.",
     )
 

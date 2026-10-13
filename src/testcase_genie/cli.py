@@ -25,12 +25,21 @@ from testcase_genie.exporter import export_suite_to_files, suite_to_markdown
 from testcase_genie.generator import TestCaseGenerator
 from testcase_genie.models import FrameworkType, GenerationConfig, TestCaseSuite
 
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 app = typer.Typer(
     name="testcase-genie",
-    help="🧞 TestCase-Genie: Generate structured QA test cases & POM automation code with Google Gemini.",
+    help="TestCase-Genie: Generate structured QA test cases & POM automation code with Google Gemini.",
     add_completion=False,
 )
-console = Console()
+console = Console(legacy_windows=False)
 
 
 def version_callback(value: bool) -> None:
