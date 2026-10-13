@@ -1,0 +1,19 @@
+"ID","Title","Type","Priority","Preconditions","Steps","Expected Result"
+"TC-001","Successful login with valid corporate credentials and valid TOTP MFA code","positive","critical","User account exists with email 'alice@enterprise.corp' and status 'Active'; Two-factor authentication is configured and enabled for user","1. Navigate to https://portal.enterprise.corp/login
+2. Enter 'alice@enterprise.corp' into email field
+3. Enter valid password into password field and click 'Sign In'
+4. Observe redirect to MFA challenge page
+5. Generate fresh TOTP from authenticator and enter into 6-digit input
+6. Click 'Verify & Continue'","Session established; user redirected to /dashboard with greeting 'Welcome, Alice'"
+"TC-002","Authentication denied when password is incorrect","negative","high","User account exists and is not locked","1. Navigate to login page
+2. Enter 'alice@enterprise.corp' and invalid password 'WrongPass!123'
+3. Click 'Sign In'","Error alert 'Invalid credentials' displayed; MFA prompt is not displayed; failed attempt count increments"
+"TC-003","Rejection of expired or previously consumed TOTP token","negative","high","User has submitted valid primary credentials and is on MFA prompt screen; TOTP token '123456' has already been consumed or its 30s window has expired","1. Enter expired TOTP '123456' into code input
+2. Click 'Verify & Continue'","Inline validation error 'Invalid or expired code. Please enter the current code from your authenticator' displayed"
+"TC-004","Account lockout triggered upon 5 consecutive failed login attempts","edge","critical","User account has 4 recorded failed attempts within the past 10 minutes","1. Enter 'alice@enterprise.corp' with 5th incorrect password
+2. Click 'Sign In'","Account locked banner displayed: 'Your account has been temporarily locked for 15 minutes due to multiple failed attempts'; subsequent valid login attempts are rejected during lockout"
+"TC-005","Mask and unmask password toggle interaction","positive","low","User is on the login page","1. Enter 'SuperSecretP@ss1' in password input
+2. Verify input type is 'password'
+3. Click eye / toggle icon
+4. Verify input type changes to 'text' and password characters are visible
+5. Click toggle icon again","Input field toggles dynamically between type='text' and type='password'"

@@ -1,0 +1,88 @@
+{
+  "title": "E-Commerce Single-Page Checkout Test Suite",
+  "description": "Validation of address entry, promo discount calculation, payment gateways, and order placement",
+  "app_type": "E-Commerce & Retail",
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "title": "Successful order placement with saved address and valid Credit Card",
+      "type": "positive",
+      "preconditions": [
+        "User is logged in as registered customer",
+        "Cart contains 2 in-stock items ($85 total)",
+        "User has at least 1 saved valid shipping address"
+      ],
+      "steps": [
+        "Navigate to cart page and click 'Proceed to Checkout'",
+        "Select default shipping address from address radio group",
+        "Select 'Credit Card' as payment method",
+        "Enter valid Visa card number, expiration date, and CVV",
+        "Click 'Place Order' button"
+      ],
+      "expected_result": "User redirected to /order-confirmation with unique Order ID and confirmation email sent notification",
+      "priority": "critical"
+    },
+    {
+      "id": "TC-002",
+      "title": "Apply valid promotional discount code and verify recalculation",
+      "type": "positive",
+      "preconditions": [
+        "User is on checkout page with items totaling $100",
+        "Promo code 'SAVE20' is active in promotion system"
+      ],
+      "steps": [
+        "Enter 'SAVE20' into Promo Code text input",
+        "Click 'Apply' button",
+        "Observe Order Summary totals breakdown"
+      ],
+      "expected_result": "Success message 'Promo SAVE20 applied (-$20.00)' displayed; Subtotal unchanged, Discount -$20.00, Total adjusted correctly",
+      "priority": "high"
+    },
+    {
+      "id": "TC-003",
+      "title": "Checkout rejected when credit card CVV length is invalid",
+      "type": "negative",
+      "preconditions": [
+        "User is on checkout payment section"
+      ],
+      "steps": [
+        "Select 'Credit Card'",
+        "Enter valid 16-digit card number and future expiration date",
+        "Enter '1' (single digit) into CVV field",
+        "Click 'Place Order'"
+      ],
+      "expected_result": "Inline field validation error 'CVV must be 3 or 4 digits' displayed; Order is not submitted and payment gateway is not contacted",
+      "priority": "high"
+    },
+    {
+      "id": "TC-004",
+      "title": "Expired promo code displays inline error without resetting cart",
+      "type": "negative",
+      "preconditions": [
+        "Promo code 'SUMMER2025' is marked expired in backend"
+      ],
+      "steps": [
+        "Enter 'SUMMER2025' into Promo Code input",
+        "Click 'Apply'"
+      ],
+      "expected_result": "Alert message 'Promo code has expired' displayed; Total remains unchanged and all entered address details remain intact",
+      "priority": "medium"
+    },
+    {
+      "id": "TC-005",
+      "title": "Inventory depletion during checkout payment processing",
+      "type": "edge",
+      "preconditions": [
+        "Cart contains 1 item with remaining inventory count = 1"
+      ],
+      "steps": [
+        "User fills checkout details and clicks 'Place Order'",
+        "Concurrent shopper completes purchase of the last stock item 100ms earlier"
+      ],
+      "expected_result": "Order fails gracefully with alert 'Item is no longer in stock'; Payment is not charged; User returned to cart with item flagged",
+      "priority": "high"
+    }
+  ],
+  "generated_code": "import pytest\nfrom playwright.sync_api import Page, expect\n\nclass CheckoutPage:\n    \"\"\"Page Object Model encapsulating the E-Commerce Checkout interface.\"\"\"\n    def __init__(self, page: Page):\n        self.page = page\n        self.saved_address_radio = page.locator(\"input[name='shipping_address']\").first  # TODO: Define locator for address selector\n        self.payment_cc_radio = page.locator(\"input[value='credit_card']\")  # TODO: Define locator for Credit Card radio\n        self.cc_number_input = page.locator(\"#cc-number\")  # TODO: Define locator for CC number input\n        self.cc_expiry_input = page.locator(\"#cc-exp\")  # TODO: Define locator for CC expiry input\n        self.cc_cvv_input = page.locator(\"#cc-cvv\")  # TODO: Define locator for CC CVV input\n        self.promo_code_input = page.locator(\"#promo-code\")  # TODO: Define locator for Promo code input\n        self.apply_promo_btn = page.locator(\"button#apply-promo\")  # TODO: Define locator for Apply Promo button\n        self.place_order_btn = page.locator(\"button#place-order\")  # TODO: Define locator for Place Order button\n        self.order_confirmation_header = page.locator(\"h1.order-confirmed\")  # TODO: Define locator for confirmation header\n        self.inline_cvv_error = page.locator(\".error-cvv\")  # TODO: Define locator for CVV inline error\n        self.promo_error_alert = page.locator(\".alert-promo-error\")  # TODO: Define locator for Promo error alert\n        self.out_of_stock_banner = page.locator(\".alert-out-of-stock\")  # TODO: Define locator for out-of-stock banner\n\n    def select_saved_address(self):\n        self.saved_address_radio.check()\n\n    def fill_credit_card(self, number: str, exp: str, cvv: str):\n        self.payment_cc_radio.check()\n        self.cc_number_input.fill(number)\n        self.cc_expiry_input.fill(exp)\n        self.cc_cvv_input.fill(cvv)\n\n    def apply_promo(self, code: str):\n        self.promo_code_input.fill(code)\n        self.apply_promo_btn.click()\n\n    def submit_order(self):\n        self.place_order_btn.click()\n\n\n@pytest.fixture\ndef checkout_page(page: Page) -> CheckoutPage:\n    page.goto(\"https://example.com/checkout\")\n    return CheckoutPage(page)\n\n\ndef test_tc_001_successful_order_placement(checkout_page: CheckoutPage):\n    \"\"\"TC-001: Successful order placement with saved address and valid Credit Card.\"\"\"\n    checkout_page.select_saved_address()\n    checkout_page.fill_credit_card(\"4111111111111111\", \"12/28\", \"123\")\n    checkout_page.submit_order()\n    expect(checkout_page.order_confirmation_header).to_be_visible()\n\n\ndef test_tc_002_apply_valid_promo_code(checkout_page: CheckoutPage):\n    \"\"\"TC-002: Apply valid promotional discount code and verify recalculation.\"\"\"\n    checkout_page.apply_promo(\"SAVE20\")\n    expect(checkout_page.page.locator(\".discount-badge\")).to_contain_text(\"-$20.00\")\n\n\ndef test_tc_003_checkout_rejected_invalid_cvv(checkout_page: CheckoutPage):\n    \"\"\"TC-003: Checkout rejected when credit card CVV length is invalid.\"\"\"\n    checkout_page.fill_credit_card(\"4111111111111111\", \"12/28\", \"1\")\n    checkout_page.submit_order()\n    expect(checkout_page.inline_cvv_error).to_be_visible()\n\n\ndef test_tc_004_expired_promo_displays_error(checkout_page: CheckoutPage):\n    \"\"\"TC-004: Expired promo code displays inline error without resetting cart.\"\"\"\n    checkout_page.apply_promo(\"SUMMER2025\")\n    expect(checkout_page.promo_error_alert).to_be_visible()\n\n\ndef test_tc_005_inventory_depletion_handling(checkout_page: CheckoutPage):\n    \"\"\"TC-005: Inventory depletion during checkout payment processing.\"\"\"\n    checkout_page.select_saved_address()\n    checkout_page.fill_credit_card(\"4111111111111111\", \"12/28\", \"123\")\n    checkout_page.submit_order()\n    expect(checkout_page.out_of_stock_banner).to_be_visible()\n",
+  "framework": "playwright"
+}

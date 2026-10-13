@@ -1,0 +1,87 @@
+{
+  "title": "Banking Fund Transfer & Idempotency Test Suite",
+  "description": "Validation of account balance rules, daily velocity limits, idempotency guards, and ledger reflection",
+  "app_type": "Banking & FinTech",
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "title": "Successful domestic fund transfer within available balance and daily limit",
+      "type": "positive",
+      "preconditions": [
+        "Customer has Checking Account #1001 with available balance $2,500.00",
+        "Daily transferred amount today is $0.00",
+        "Beneficiary Account #9988 is registered and active"
+      ],
+      "steps": [
+        "Navigate to /transfers/new",
+        "Select Source Account 'Checking #1001'",
+        "Select Beneficiary 'Bob Smith (#9988)'",
+        "Enter Amount '500.00'",
+        "Click 'Confirm Transfer'"
+      ],
+      "expected_result": "Transfer confirmation modal displays Transaction Reference #; Checking balance updates to $1,999.50 ($500 + $0.50 fee); status 'Completed'",
+      "priority": "critical"
+    },
+    {
+      "id": "TC-002",
+      "title": "Transfer rejected when amount exceeds available account balance",
+      "type": "negative",
+      "preconditions": [
+        "Checking balance is $100.00"
+      ],
+      "steps": [
+        "Select Checking #1001",
+        "Enter Amount '150.00'",
+        "Click 'Confirm Transfer'"
+      ],
+      "expected_result": "Validation error 'Insufficient funds for this transfer including $0.50 transaction fee'; Transfer blocked before debit",
+      "priority": "high"
+    },
+    {
+      "id": "TC-003",
+      "title": "Transfer rejected when cumulative 24-hour limit exceeds $5,000",
+      "type": "negative",
+      "preconditions": [
+        "Checking balance is $10,000.00",
+        "Customer has already transferred $4,500.00 within past 24 hours"
+      ],
+      "steps": [
+        "Enter Amount '600.00'",
+        "Click 'Confirm Transfer'"
+      ],
+      "expected_result": "Error alert 'Daily transfer limit exceeded. Remaining allowance for today: $500.00'; Transfer rejected",
+      "priority": "high"
+    },
+    {
+      "id": "TC-004",
+      "title": "Idempotency key prevents duplicate debit on rapid double-click",
+      "type": "edge",
+      "preconditions": [
+        "Checking balance is $1,000.00",
+        "User fills valid transfer form for $200.00"
+      ],
+      "steps": [
+        "Simulate double-click or simultaneous duplicate HTTP POST request with identical Idempotency-Key",
+        "Inspect backend transaction ledger for Checking #1001"
+      ],
+      "expected_result": "Exactly ONE debit of $200.50 occurs in ledger; second request returns identical cached confirmation payload without duplicate debit",
+      "priority": "critical"
+    },
+    {
+      "id": "TC-005",
+      "title": "Boundary value zero and negative amount rejection in UI input",
+      "type": "edge",
+      "preconditions": [
+        "User is on transfer screen"
+      ],
+      "steps": [
+        "Attempt to input '0.00' and click Confirm",
+        "Attempt to input '-50.00' and click Confirm"
+      ],
+      "expected_result": "Input field enforces minimum value > $0.01; 'Confirm Transfer' button remains disabled or alerts 'Amount must be greater than 0'",
+      "priority": "medium"
+    }
+  ],
+  "generated_code": "import pytest\nfrom playwright.sync_api import Page, expect\n\n\nclass TransferPage:\n    \"\"\"Page Object Model for Banking Fund Transfer interface.\"\"\"\n\n    def __init__(self, page: Page):\n        self.page = page\n        self.source_account_select = page.locator(\"select#source-account\")  # TODO: Define locator for source account dropdown\n        self.beneficiary_select = page.locator(\"select#beneficiary-account\")  # TODO: Define locator for beneficiary selector\n        self.amount_input = page.locator(\"input#transfer-amount\")  # TODO: Define locator for transfer amount input\n        self.confirm_btn = page.locator(\"button#btn-confirm-transfer\")  # TODO: Define locator for confirm transfer button\n        self.tx_modal_success = page.locator(\".modal-tx-success\")  # TODO: Define locator for success confirmation modal\n        self.insufficient_funds_alert = page.locator(\".alert-insufficient-funds\")  # TODO: Define locator for insufficient funds alert\n        self.daily_limit_alert = page.locator(\".alert-daily-limit\")  # TODO: Define locator for daily limit alert\n        self.account_balance_display = page.locator(\"#balance-display\")  # TODO: Define locator for account balance display\n\n    def execute_transfer(self, source_acc: str, beneficiary: str, amount: str):\n        self.source_account_select.select_option(label=source_acc)\n        self.beneficiary_select.select_option(label=beneficiary)\n        self.amount_input.fill(amount)\n        self.confirm_btn.click()\n\n\n@pytest.fixture\ndef transfer_page(page: Page) -> TransferPage:\n    page.goto(\"https://banking.example.com/transfers/new\")\n    return TransferPage(page)\n\n\ndef test_tc_001_successful_fund_transfer(transfer_page: TransferPage):\n    \"\"\"TC-001: Successful domestic fund transfer within available balance and daily limit.\"\"\"\n    transfer_page.execute_transfer(\"Checking #1001\", \"Bob Smith (#9988)\", \"500.00\")\n    expect(transfer_page.tx_modal_success).to_be_visible()\n    expect(transfer_page.account_balance_display).to_contain_text(\"1,999.50\")\n\n\ndef test_tc_002_insufficient_funds_rejected(transfer_page: TransferPage):\n    \"\"\"TC-002: Transfer rejected when amount exceeds available account balance.\"\"\"\n    transfer_page.execute_transfer(\"Checking #1001\", \"Bob Smith (#9988)\", \"150.00\")\n    expect(transfer_page.insufficient_funds_alert).to_be_visible()\n\n\ndef test_tc_003_daily_limit_exceeded(transfer_page: TransferPage):\n    \"\"\"TC-003: Transfer rejected when cumulative 24-hour limit exceeds $5,000.\"\"\"\n    transfer_page.execute_transfer(\"Checking #1001\", \"Bob Smith (#9988)\", \"600.00\")\n    expect(transfer_page.daily_limit_alert).to_be_visible()\n\n\ndef test_tc_004_idempotency_prevents_duplicate_debit(transfer_page: TransferPage):\n    \"\"\"TC-004: Idempotency key prevents duplicate debit on rapid double-click.\"\"\"\n    transfer_page.source_account_select.select_option(label=\"Checking #1001\")\n    transfer_page.beneficiary_select.select_option(label=\"Bob Smith (#9988)\")\n    transfer_page.amount_input.fill(\"200.00\")\n    # Simulate double-click\n    transfer_page.confirm_btn.dblclick()\n    expect(transfer_page.tx_modal_success).to_be_visible()\n\n\ndef test_tc_005_zero_and_negative_amount_blocked(transfer_page: TransferPage):\n    \"\"\"TC-005: Boundary value zero and negative amount rejection in UI input.\"\"\"\n    transfer_page.amount_input.fill(\"0.00\")\n    expect(transfer_page.confirm_btn).to_be_disabled()\n",
+  "framework": "playwright"
+}

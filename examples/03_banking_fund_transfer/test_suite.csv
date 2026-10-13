@@ -1,0 +1,15 @@
+"ID","Title","Type","Priority","Preconditions","Steps","Expected Result"
+"TC-001","Successful domestic fund transfer within available balance and daily limit","positive","critical","Customer has Checking Account #1001 with available balance $2,500.00; Daily transferred amount today is $0.00; Beneficiary Account #9988 is registered and active","1. Navigate to /transfers/new
+2. Select Source Account 'Checking #1001'
+3. Select Beneficiary 'Bob Smith (#9988)'
+4. Enter Amount '500.00'
+5. Click 'Confirm Transfer'","Transfer confirmation modal displays Transaction Reference #; Checking balance updates to $1,999.50 ($500 + $0.50 fee); status 'Completed'"
+"TC-002","Transfer rejected when amount exceeds available account balance","negative","high","Checking balance is $100.00","1. Select Checking #1001
+2. Enter Amount '150.00'
+3. Click 'Confirm Transfer'","Validation error 'Insufficient funds for this transfer including $0.50 transaction fee'; Transfer blocked before debit"
+"TC-003","Transfer rejected when cumulative 24-hour limit exceeds $5,000","negative","high","Checking balance is $10,000.00; Customer has already transferred $4,500.00 within past 24 hours","1. Enter Amount '600.00'
+2. Click 'Confirm Transfer'","Error alert 'Daily transfer limit exceeded. Remaining allowance for today: $500.00'; Transfer rejected"
+"TC-004","Idempotency key prevents duplicate debit on rapid double-click","edge","critical","Checking balance is $1,000.00; User fills valid transfer form for $200.00","1. Simulate double-click or simultaneous duplicate HTTP POST request with identical Idempotency-Key
+2. Inspect backend transaction ledger for Checking #1001","Exactly ONE debit of $200.50 occurs in ledger; second request returns identical cached confirmation payload without duplicate debit"
+"TC-005","Boundary value zero and negative amount rejection in UI input","edge","medium","User is on transfer screen","1. Attempt to input '0.00' and click Confirm
+2. Attempt to input '-50.00' and click Confirm","Input field enforces minimum value > $0.01; 'Confirm Transfer' button remains disabled or alerts 'Amount must be greater than 0'"

@@ -1,0 +1,89 @@
+{
+  "title": "Enterprise Authentication and MFA Security Test Suite",
+  "description": "Validation of credentials, TOTP verification, brute-force defense, and account lockout",
+  "app_type": "Authentication & Security",
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "title": "Successful login with valid corporate credentials and valid TOTP MFA code",
+      "type": "positive",
+      "preconditions": [
+        "User account exists with email 'alice@enterprise.corp' and status 'Active'",
+        "Two-factor authentication is configured and enabled for user"
+      ],
+      "steps": [
+        "Navigate to https://portal.enterprise.corp/login",
+        "Enter 'alice@enterprise.corp' into email field",
+        "Enter valid password into password field and click 'Sign In'",
+        "Observe redirect to MFA challenge page",
+        "Generate fresh TOTP from authenticator and enter into 6-digit input",
+        "Click 'Verify & Continue'"
+      ],
+      "expected_result": "Session established; user redirected to /dashboard with greeting 'Welcome, Alice'",
+      "priority": "critical"
+    },
+    {
+      "id": "TC-002",
+      "title": "Authentication denied when password is incorrect",
+      "type": "negative",
+      "preconditions": [
+        "User account exists and is not locked"
+      ],
+      "steps": [
+        "Navigate to login page",
+        "Enter 'alice@enterprise.corp' and invalid password 'WrongPass!123'",
+        "Click 'Sign In'"
+      ],
+      "expected_result": "Error alert 'Invalid credentials' displayed; MFA prompt is not displayed; failed attempt count increments",
+      "priority": "high"
+    },
+    {
+      "id": "TC-003",
+      "title": "Rejection of expired or previously consumed TOTP token",
+      "type": "negative",
+      "preconditions": [
+        "User has submitted valid primary credentials and is on MFA prompt screen",
+        "TOTP token '123456' has already been consumed or its 30s window has expired"
+      ],
+      "steps": [
+        "Enter expired TOTP '123456' into code input",
+        "Click 'Verify & Continue'"
+      ],
+      "expected_result": "Inline validation error 'Invalid or expired code. Please enter the current code from your authenticator' displayed",
+      "priority": "high"
+    },
+    {
+      "id": "TC-004",
+      "title": "Account lockout triggered upon 5 consecutive failed login attempts",
+      "type": "edge",
+      "preconditions": [
+        "User account has 4 recorded failed attempts within the past 10 minutes"
+      ],
+      "steps": [
+        "Enter 'alice@enterprise.corp' with 5th incorrect password",
+        "Click 'Sign In'"
+      ],
+      "expected_result": "Account locked banner displayed: 'Your account has been temporarily locked for 15 minutes due to multiple failed attempts'; subsequent valid login attempts are rejected during lockout",
+      "priority": "critical"
+    },
+    {
+      "id": "TC-005",
+      "title": "Mask and unmask password toggle interaction",
+      "type": "positive",
+      "preconditions": [
+        "User is on the login page"
+      ],
+      "steps": [
+        "Enter 'SuperSecretP@ss1' in password input",
+        "Verify input type is 'password'",
+        "Click eye / toggle icon",
+        "Verify input type changes to 'text' and password characters are visible",
+        "Click toggle icon again"
+      ],
+      "expected_result": "Input field toggles dynamically between type='text' and type='password'",
+      "priority": "low"
+    }
+  ],
+  "generated_code": "import pytest\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.support.ui import WebDriverWait\nfrom selenium.webdriver.support import expected_conditions as EC\n\n\nclass LoginPage:\n    \"\"\"Page Object for Enterprise Login and MFA Challenge.\"\"\"\n\n    EMAIL_INPUT = (By.ID, \"corporate-email\")  # TODO: Define locator for email input\n    PASSWORD_INPUT = (By.ID, \"account-password\")  # TODO: Define locator for password input\n    SIGN_IN_BTN = (By.CSS_SELECTOR, \"button[type='submit']\")  # TODO: Define locator for sign in button\n    MFA_CODE_INPUT = (By.ID, \"totp-code-input\")  # TODO: Define locator for 6-digit TOTP input\n    VERIFY_MFA_BTN = (By.ID, \"btn-verify-mfa\")  # TODO: Define locator for verify MFA button\n    ERROR_ALERT = (By.CLASS_NAME, \"alert-danger\")  # TODO: Define locator for error alert\n    LOCKOUT_ALERT = (By.CLASS_NAME, \"alert-lockout\")  # TODO: Define locator for lockout message\n    PASSWORD_TOGGLE = (By.ID, \"toggle-password-visibility\")  # TODO: Define locator for show/hide password toggle\n    DASHBOARD_HEADING = (By.TAG_NAME, \"h1\")  # TODO: Define locator for dashboard greeting\n\n    def __init__(self, driver: webdriver.Remote):\n        self.driver = driver\n        self.wait = WebDriverWait(driver, 10)\n\n    def enter_credentials(self, email: str, password: str):\n        self.wait.until(EC.visibility_of_element_located(self.EMAIL_INPUT)).send_keys(email)\n        self.driver.find_element(*self.PASSWORD_INPUT).send_keys(password)\n        self.driver.find_element(*self.SIGN_IN_BTN).click()\n\n    def enter_mfa_code(self, code: str):\n        self.wait.until(EC.visibility_of_element_located(self.MFA_CODE_INPUT)).send_keys(code)\n        self.driver.find_element(*self.VERIFY_MFA_BTN).click()\n\n    def toggle_password_visibility(self):\n        self.driver.find_element(*self.PASSWORD_TOGGLE).click()\n\n    def get_password_field_type(self) -> str:\n        return self.driver.find_element(*self.PASSWORD_INPUT).get_attribute(\"type\")\n\n\n@pytest.fixture\ndef driver():\n    options = webdriver.ChromeOptions()\n    options.add_argument(\"--headless\")\n    driver = webdriver.Chrome(options=options)\n    driver.implicitly_wait(5)\n    yield driver\n    driver.quit()\n\n\ndef test_tc_001_successful_login_with_mfa(driver):\n    \"\"\"TC-001: Successful login with valid corporate credentials and valid TOTP MFA code.\"\"\"\n    driver.get(\"https://portal.enterprise.corp/login\")\n    login = LoginPage(driver)\n    login.enter_credentials(\"alice@enterprise.corp\", \"ValidP@ssw0rd!\")\n    login.enter_mfa_code(\"582910\")\n    heading = login.wait.until(EC.visibility_of_element_located(LoginPage.DASHBOARD_HEADING))\n    assert \"Welcome, Alice\" in heading.text\n\n\ndef test_tc_002_invalid_password(driver):\n    \"\"\"TC-002: Authentication denied when password is incorrect.\"\"\"\n    driver.get(\"https://portal.enterprise.corp/login\")\n    login = LoginPage(driver)\n    login.enter_credentials(\"alice@enterprise.corp\", \"WrongPass!123\")\n    alert = login.wait.until(EC.visibility_of_element_located(LoginPage.ERROR_ALERT))\n    assert \"Invalid credentials\" in alert.text\n\n\ndef test_tc_003_expired_mfa_code(driver):\n    \"\"\"TC-003: Rejection of expired or previously consumed TOTP token.\"\"\"\n    driver.get(\"https://portal.enterprise.corp/login\")\n    login = LoginPage(driver)\n    login.enter_credentials(\"alice@enterprise.corp\", \"ValidP@ssw0rd!\")\n    login.enter_mfa_code(\"000000\")\n    alert = login.wait.until(EC.visibility_of_element_located(LoginPage.ERROR_ALERT))\n    assert \"Invalid or expired code\" in alert.text\n\n\ndef test_tc_004_account_lockout_after_failures(driver):\n    \"\"\"TC-004: Account lockout triggered upon 5 consecutive failed login attempts.\"\"\"\n    driver.get(\"https://portal.enterprise.corp/login\")\n    login = LoginPage(driver)\n    login.enter_credentials(\"alice@enterprise.corp\", \"WrongPass5\")\n    lockout = login.wait.until(EC.visibility_of_element_located(LoginPage.LOCKOUT_ALERT))\n    assert \"locked for 15 minutes\" in lockout.text\n\n\ndef test_tc_005_password_mask_toggle(driver):\n    \"\"\"TC-005: Mask and unmask password toggle interaction.\"\"\"\n    driver.get(\"https://portal.enterprise.corp/login\")\n    login = LoginPage(driver)\n    login.enter_credentials(\"alice@enterprise.corp\", \"SuperSecretP@ss1\")\n    assert login.get_password_field_type() == \"password\"\n    login.toggle_password_visibility()\n    assert login.get_password_field_type() == \"text\"\n",
+  "framework": "selenium"
+}
