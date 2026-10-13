@@ -95,7 +95,12 @@ def generate(
         None,
         "--model",
         "-m",
-        help="Gemini model override (e.g. gemini-2.5-flash, gemini-2.5-pro).",
+        help="Gemini model override (e.g. gemini-3.8-flash, gemini-3.8-pro).",
+    ),
+    name: Optional[str] = typer.Option(
+        None,
+        "--name",
+        help="Base filename for exported assets (e.g. test_suite).",
     ),
     show_code: bool = typer.Option(
         False,
@@ -238,10 +243,11 @@ def generate(
 
     # 6. Export to Files if output_dir specified
     if output_dir:
+        base_filename = name or f"{suite.title.lower().replace(' ', '_')[:30]}"
         exported = export_suite_to_files(
             suite=suite,
             output_dir=output_dir,
-            base_name=f"{suite.title.lower().replace(' ', '_')[:30]}",
+            base_name=base_filename,
         )
         console.print(f"\n[bold green]Exported assets to directory:[/bold green] [underline]{output_dir}[/underline]")
         for fmt, path in exported.items():

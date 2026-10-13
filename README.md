@@ -4,10 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested with Pytest](https://img.shields.io/badge/tested%20with-pytest-yellow.svg)](https://docs.pytest.org/)
 [![Google Gemini API](https://img.shields.io/badge/Google%20Gemini-Powered-4285F4.svg)](https://ai.google.dev/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 > **AI-Powered QA Test Case & Automation Code Generator for Senior QA Teams.**  
-> Transform user stories into comprehensive, ISTQB-aligned test scenarios (positive, negative, edge, and boundary cases) and production-ready **Page Object Model (POM)** starter automation code in Python with **Playwright** or **Selenium**.
+> Transform user stories into comprehensive test scenarios (positive, negative, edge, and boundary cases) and starter **Page Object Model (POM)** automation code in Python with **Playwright** or **Selenium**.
 
 ---
 
@@ -17,7 +16,7 @@
 +-----------------------------------------------------------------------------------+
 |  🧞 TestCase-Genie | Streamlit & CLI                                              |
 |                                                                                   |
-|  [ User Story Input ] ---> [ Google Gemini 2.5 Agent ] ---> [ Structured Suite ]  |
+|  [ User Story Input ] ---> [ Google Gemini 3.8 Flash Agent ] ---> [ Structured ]  |
 |                                                              |                    |
 |  • Positive (Happy Path)  • Negative (Errors)               v                     |
 |  • Boundary Value (BVA)   • Concurrency & Idempotency   [ POM Automation Code ]   |
@@ -186,7 +185,7 @@ flowchart TD
     subgraph AgentCore ["Core Agent Pipeline"]
         Generator --> Prompts["Prompts System (prompts/)"]
         Generator --> GeminiAgent["GeminiAgent (agent.py)"]
-        GeminiAgent --> GoogleGenAI["Google Gemini 2.5 SDK"]
+        GeminiAgent --> GoogleGenAI["Google Gemini 3.8 Flash SDK"]
         GoogleGenAI --> GeminiAgent
         GeminiAgent --> Pydantic["Pydantic Validation (models.py)"]
         Pydantic -->|On Malformed JSON| Repair["Autonomous Retry Loop"]
@@ -230,8 +229,9 @@ This project was planned, architected, and built end-to-end with **Antigravity**
 
 ---
 
-## ⚠️ Limitations
+## ⚠️ Limitations & QA Notices
 
+- **Not Executed Against Live Browsers**: Generated starter automation code has **not** been run against a live browser. Locators are provided as `# TODO` placeholders and must be reviewed, verified, and mapped to your application's actual DOM before test execution.
 - **Selector Placeholders**: LLMs do not have live access to your private web application's DOM at runtime. Locators are generated as `# TODO` placeholders that require QA engineers to drop in verified selectors.
 - **API Rate Limits**: On free-tier Gemini API keys, high concurrency requests may encounter HTTP 429 rate limits (mitigated via built-in exponential backoff).
 - **Dynamic Assertions**: Backend database state assertions require custom database connections or mock fixtures.

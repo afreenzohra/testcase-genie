@@ -1,6 +1,6 @@
 # 🧞 TestCase-Genie: Architecture & System Design
 
-TestCase-Genie is an intelligent test engineering agent designed to bridge the gap between product requirements (User Stories) and automated test execution. It synthesizes structured, ISTQB-aligned test scenarios (positive, negative, edge, and boundary cases) and generates starter automation code adhering to the **Page Object Model (POM)** in Python with **Playwright** or **Selenium**.
+TestCase-Genie is an intelligent test engineering agent designed to bridge the gap between product requirements (User Stories) and automated test execution. It synthesizes structured test scenarios (positive, negative, edge, and boundary cases) and generates starter automation code adhering to the **Page Object Model (POM)** in Python with **Playwright** or **Selenium**.
 
 ---
 

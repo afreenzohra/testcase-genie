@@ -1,19 +1,30 @@
 "ID","Title","Type","Priority","Preconditions","Steps","Expected Result"
-"TC-001","Successful login with valid corporate credentials and valid TOTP MFA code","positive","critical","User account exists with email 'alice@enterprise.corp' and status 'Active'; Two-factor authentication is configured and enabled for user","1. Navigate to https://portal.enterprise.corp/login
-2. Enter 'alice@enterprise.corp' into email field
-3. Enter valid password into password field and click 'Sign In'
-4. Observe redirect to MFA challenge page
-5. Generate fresh TOTP from authenticator and enter into 6-digit input
-6. Click 'Verify & Continue'","Session established; user redirected to /dashboard with greeting 'Welcome, Alice'"
-"TC-002","Authentication denied when password is incorrect","negative","high","User account exists and is not locked","1. Navigate to login page
-2. Enter 'alice@enterprise.corp' and invalid password 'WrongPass!123'
-3. Click 'Sign In'","Error alert 'Invalid credentials' displayed; MFA prompt is not displayed; failed attempt count increments"
-"TC-003","Rejection of expired or previously consumed TOTP token","negative","high","User has submitted valid primary credentials and is on MFA prompt screen; TOTP token '123456' has already been consumed or its 30s window has expired","1. Enter expired TOTP '123456' into code input
-2. Click 'Verify & Continue'","Inline validation error 'Invalid or expired code. Please enter the current code from your authenticator' displayed"
-"TC-004","Account lockout triggered upon 5 consecutive failed login attempts","edge","critical","User account has 4 recorded failed attempts within the past 10 minutes","1. Enter 'alice@enterprise.corp' with 5th incorrect password
-2. Click 'Sign In'","Account locked banner displayed: 'Your account has been temporarily locked for 15 minutes due to multiple failed attempts'; subsequent valid login attempts are rejected during lockout"
-"TC-005","Mask and unmask password toggle interaction","positive","low","User is on the login page","1. Enter 'SuperSecretP@ss1' in password input
-2. Verify input type is 'password'
-3. Click eye / toggle icon
-4. Verify input type changes to 'text' and password characters are visible
-5. Click toggle icon again","Input field toggles dynamically between type='text' and type='password'"
+"TC-001","Successful End-to-End Authentication with Valid Credentials and Active TOTP MFA","positive","critical","Corporate user account exists with email 'emp.test@corp.internal' and has MFA enabled.; Authenticator TOTP shared secret is synchronized with the auth server.; Account is active, unlocked, and has 0 failed attempts recorded.","1. 1. Navigate to enterprise login portal at '/login'.
+2. 2. Input 'emp.test@corp.internal' into the corporate email field.
+3. 3. Input the valid user password into the password field.
+4. 4. Click the 'Sign In' button.
+5. 5. Verify that the UI transitions to the MFA verification screen with an input field for a 6-digit code.
+6. 6. Obtain the current valid 6-digit TOTP code from the authenticator app within its 30-second validity window.
+7. 7. Enter the 6-digit TOTP code and submit the verification form.","Authentication completes successfully; user session cookie/token is issued, and browser redirects to '/dashboard'."
+"TC-002","Verify Password Masking and Unhide/Mask Toggle Control Functionality","positive","medium","User is on the enterprise login screen at '/login'.","1. 1. Focus on the password input field.
+2. 2. Type the string 'ComplexSecur3P@ss!'.
+3. 3. Inspect the DOM to verify the input type attribute is 'password' and characters are obscured by mask glyphs.
+4. 4. Click the eye/toggle unmask icon located inside or adjacent to the password input field.
+5. 5. Inspect the DOM to verify the input type attribute changes to 'text' and the text 'ComplexSecur3P@ss!' is visible in plain text.
+6. 6. Click the toggle unmask icon a second time.
+7. 7. Verify the input type attribute switches back to 'password' with characters masked and input content intact.","Password field defaults to masked input, toggles to plain text on user command, and toggles back to obscured characters without modifying or clearing the typed string."
+"TC-003","Reject Authentication Attempt with Expired or Previously Consumed TOTP Code","negative","high","User account 'mfa.user@corp.internal' has MFA enabled.; Primary email and password credentials have been entered successfully, landing on the MFA entry step.","1. 1. Capture a valid 6-digit TOTP code from the authenticator app.
+2. 2. Wait at least 31 seconds for the current 30-second TOTP validity window to lapse.
+3. 3. Enter the elapsed 6-digit TOTP code into the MFA code input field.
+4. 4. Click the 'Verify' button.
+5. 5. Attempt to re-enter a previously consumed TOTP token from an earlier successful login.","Authentication fails; session is not granted, and error message is displayed: 'Code expired or invalid; generate a new code'."
+"TC-004","Trigger 15-Minute Account Lockout After 5 Consecutive Primary Password Failures","negative","critical","User account 'lockout.victim@corp.internal' exists, is active, and has 0 failed attempts recorded.","1. 1. Navigate to '/login'.
+2. 2. Submit 'lockout.victim@corp.internal' with an invalid password 4 consecutive times within a 2-minute interval.
+3. 3. Confirm that attempts 1 through 4 display an 'Invalid credentials' error and allow subsequent login attempts.
+4. 4. Submit the 5th consecutive invalid password attempt.
+5. 5. Attempt a 6th login using the actual, valid password for 'lockout.victim@corp.internal'.","On the 5th failure, the account status transitions to locked. The 6th attempt with valid credentials is rejected with an account lockout notification indicating the account is locked for 15 minutes."
+"TC-005","Account Lockout Enforcement Across Mixed Password and MFA Failures in 15-Minute Sliding Window","edge","high","User account 'mixed.fail@corp.internal' exists with MFA enabled.; Sliding window counter is clean with 0 recorded failures.","1. 1. Enter 'mixed.fail@corp.internal' with an incorrect password 3 consecutive times.
+2. 2. On attempt 4, enter the correct password to pass primary authentication and reach the MFA screen.
+3. 3. Enter an invalid 6-digit code on the MFA screen (failure count: 4).
+4. 4. Return to login, enter the correct password, reach the MFA screen, and enter an invalid 6-digit code for the 5th total failure within 10 minutes of attempt 1.
+5. 5. Immediately attempt to authenticate using valid primary credentials and a valid TOTP.","System aggregates primary credential and MFA failures within the 15-minute sliding window; the 5th cumulative failure triggers the 15-minute account lockout, denying access even with valid primary and MFA credentials."
