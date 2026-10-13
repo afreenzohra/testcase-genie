@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from unittest.mock import MagicMock, patch
 from typer.testing import CliRunner
 
@@ -11,14 +12,19 @@ from testcase_genie.models import TestCaseSuite
 
 runner = CliRunner()
 
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
 
 def test_cli_help():
     """Verify CLI --help runs cleanly and outputs commands and options."""
     result = runner.invoke(app, ["--help"])
+    # Rich adds ANSI styling when it detects CI (e.g. GitHub Actions), which can
+    # split option names like "--framework"; strip it before asserting.
+    output = ANSI_ESCAPE.sub("", result.output)
     assert result.exit_code == 0
-    assert "Generate structured QA test cases" in result.output
-    assert "--framework" in result.output
-    assert "--count" in result.output
+    assert "Generate structured QA test cases" in output
+    assert "--framework" in output
+    assert "--count" in output
 
 
 def test_cli_version():
